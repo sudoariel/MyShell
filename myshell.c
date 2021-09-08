@@ -28,7 +28,7 @@ int main() {
 
         // Realiza a leitura da linha
         int ret = read_command(&command, &args, &arg_number);
-        if(ret >= 0) {
+        if(ret == 0) {
             // FOR DEBUGGING
             /*
             printf ("command: %s arg_number: %d\n----args----\n", command, arg_number);
@@ -38,6 +38,9 @@ int main() {
 
             // Verifica comando e executa sua função específica
             if(strcmp(command, "wait") == 0) {
+                printf("TODO: Implementar comando %s.\n", command);
+            }
+            else if(strcmp(command, "start") == 0) {
                 printf("TODO: Implementar comando %s.\n", command);
             }
             else if(strcmp(command, "run") == 0) {
@@ -62,8 +65,15 @@ int main() {
                 printf("Comando desconhecido: %s\n", command);
             }         
         } 
-        else {
+        else if(ret == -1){
             continue;
+        }
+        else {
+            // EOF ret == 1
+            for(int i = 0; i < arg_number; i++) 
+                free(args[i]);
+            free(args);
+            return 0;
         }
 
         // Liberando memória alocada das variáveis utilizadas nessa iteração.
@@ -92,7 +102,8 @@ int read_command(char** command, char*** args, int* arg_number) {
     char* cmd = (char*) malloc(COMMAND_MAX_CHAR * sizeof(char));
     int word_counter = 0;
 
-    fgets(str, COMMAND_MAX_CHAR, stdin);    
+    if(fgets(str, COMMAND_MAX_CHAR, stdin) == NULL)
+        return 1;    
     fflush(stdout);
 
     cmd = strtok(str, " \t\n");  
