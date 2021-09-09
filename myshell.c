@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdbool.h>
+#include <sys/wait.h>
+#include <stdint.h>
 
 #define MYSHELL_VERSION "v0.0"
 #define CYAN_COLOR_TERM "\x1B[36;1m"
@@ -11,8 +13,12 @@
 #define COMMAND_MAX_WORD 100
 
 static void print_myshell();
+static void print_myshell_return();
 static void print_header();
 static int read_command(char** command, char*** args, int* arg_number);
+static void run(char** args);
+static void start(char** args);
+static void wait_proc();
 
 int main() {    
     print_header();
@@ -38,13 +44,16 @@ int main() {
 
             // Verifica comando e executa sua função específica
             if(strcmp(command, "wait") == 0) {
-                printf("TODO: Implementar comando %s.\n", command);
+                //printf("TODO: Implementar comando %s.\n", command);
+                wait_proc();
             }
             else if(strcmp(command, "start") == 0) {
-                printf("TODO: Implementar comando %s.\n", command);
+                //printf("TODO: Implementar comando %s.\n", command);
+                start(args);
             }
             else if(strcmp(command, "run") == 0) {
-                printf("TODO: Implementar comando %s.\n", command);
+                //printf("TODO: Implementar comando %s.\n", command);
+                run(args);
             }
             else if(strcmp(command, "stop") == 0) {
                 printf("TODO: Implementar comando %s.\n", command);
@@ -91,6 +100,12 @@ void print_myshell() {
     printf("> ");
 }
 
+void print_myshell_return(){
+    printf("%s", CYAN_COLOR_TERM);
+    printf("myshell: ");   
+    printf("%s", DEFAULT_COLOR_TERM);
+}
+
 void print_header() {
     printf("MyShell %s\n", MYSHELL_VERSION);
     printf("Authors: André Paiva, Ariel Andrade, Natan Moura, Pedro Correia\n\n");    
@@ -130,3 +145,68 @@ int read_command(char** command, char*** args, int* arg_number) {
     return 0;   
 }
 
+void wait_proc(){
+    int wstatus;
+    int cpid = wait(&wstatus);
+    if(cpid > 0){
+        if (WIFEXITED(wstatus)) {  
+            print_myshell_return();
+            printf("processo %d foi finalizado com status %d.\n",cpid,WEXITSTATUS(wstatus));
+        }   
+        //To do: Tratar mais erros
+        else if (WIFSIGNALED(wstatus)) {
+            printf("processo %d finalizou de forma anormal com sinal %d, killed.\n", cpid, WTERMSIG(wstatus));
+        } else if (WIFSTOPPED(wstatus)) {
+            printf("processo %d foi parado pelo sinal %d\n", cpid, WSTOPSIG(wstatus));
+        }
+    }
+    else{
+        print_myshell_return();
+        printf("não há processos restantes.\n");
+    }
+}
+
+void start(char **argv){
+    pid_t cpid;
+    cpid = fork();
+    if (cpid == -1) {
+        exit(EXIT_FAILURE);
+    }
+    else if (cpid == 0) {  
+        int s = execvp(argv[0],argv);
+        if(s < 0) exit(EXIT_FAILURE);
+        
+    }
+    else{        
+        print_myshell_return();
+        printf("processo %d foi iniciado.\n",cpid); 
+    }
+}
+
+void run(char **argv){ 
+    pid_t cpid;
+    int wstatus;
+    cpid = fork();
+    if (cpid == -1) {
+        exit(EXIT_FAILURE);
+    }
+    else if (cpid == 0) {   
+       int s = execvp(argv[0],argv);
+       perror(argv[0]);
+       if(s < 0) exit(EXIT_FAILURE);
+       else exit(EXIT_SUCCESS);
+    }
+    else {     
+        waitpid(cpid, &wstatus, WUNTRACED);
+        if (WIFEXITED(wstatus)) {  
+            print_myshell_return();
+            printf("processo %d foi finalizado com status %d.\n",cpid,WEXITSTATUS(wstatus));
+        }   
+        //To do: Tratar mais erros
+        else if (WIFSIGNALED(wstatus)) {
+            printf("processo %d finalizou de forma anormal com sinal %d, killed.\n", cpid, WTERMSIG(wstatus));
+        } else if (WIFSTOPPED(wstatus)) {
+            printf("processo %d foi parado pelo sinal %d\n", cpid, WSTOPSIG(wstatus));
+        }
+    }                 
+}
