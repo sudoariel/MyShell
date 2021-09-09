@@ -8,6 +8,7 @@
 
 #define MYSHELL_VERSION "v0.0"
 #define CYAN_COLOR_TERM "\x1B[36;1m"
+#define YELL_COLOR_TERM "\x1B[33m"
 #define DEFAULT_COLOR_TERM "\x1B[0m"
 #define COMMAND_MAX_CHAR 4096
 #define COMMAND_MAX_WORD 100
@@ -101,7 +102,7 @@ void print_myshell() {
 }
 
 void print_myshell_return(){
-    printf("%s", CYAN_COLOR_TERM);
+    printf("%s", YELL_COLOR_TERM);
     printf("myshell: ");   
     printf("%s", DEFAULT_COLOR_TERM);
 }
