@@ -1,10 +1,13 @@
+#define _POSIX_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdbool.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 #include <stdint.h>
+#include <signal.h>
 
 #define MYSHELL_VERSION "v0.0"
 #define CYAN_COLOR_TERM "\x1B[36;1m"
@@ -20,6 +23,9 @@ static int read_command(char** command, char*** args, int* arg_number);
 static void run(char** args);
 static void start(char** args);
 static void wait_proc();
+static void stop_proc();
+static void kill_proc();
+static void continue_proc();
 
 int main() {    
     print_header();
@@ -57,13 +63,16 @@ int main() {
                 run(args);
             }
             else if(strcmp(command, "stop") == 0) {
-                printf("TODO: Implementar comando %s.\n", command);
+                //printf("TODO: Implementar comando %s.\n", command);
+                stop_proc(args);
             }
             else if(strcmp(command, "continue") == 0) {
-                printf("TODO: Implementar comando %s.\n", command);
+                //printf("TODO: Implementar comando %s.\n", command);
+                continue_proc(args);
             }
             else if(strcmp(command, "kill") == 0) {
-                printf("TODO: Implementar comando %s.\n", command);
+                //printf("TODO: Implementar comando %s.\n", command);
+                kill_proc(args);
             }
             else if(strcmp(command, "quit") == 0 || strcmp(command, "exit") == 0) {
                 for(int i = 0; i < arg_number; i++) 
@@ -210,4 +219,28 @@ void run(char **argv){
             printf("processo %d foi parado pelo sinal %d\n", cpid, WSTOPSIG(wstatus));
         }
     }                 
+}
+
+void stop_proc(char **argv){
+    pid_t stop_pid = atoi(argv[0]);
+    if(kill(stop_pid, SIGSTOP) == -1){
+        print_myshell_return();
+        printf("Parada de processo falhou\n");
+    }
+}
+
+void kill_proc(char **argv){
+    pid_t stop_pid = atoi(argv[0]);
+    if(kill(stop_pid, SIGKILL) == -1){
+        print_myshell_return();
+        printf("Kill de processo falhou\n");
+    }
+}
+
+void continue_proc(char **argv){
+    pid_t stop_pid = atoi(argv[0]);
+    if(kill(stop_pid, SIGCONT) == -1){
+        print_myshell_return();
+        printf("Continue de processo falhou\n");
+    }
 }
