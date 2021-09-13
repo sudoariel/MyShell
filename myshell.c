@@ -155,20 +155,35 @@ int read_command(char** command, char*** args, int* arg_number) {
     return 0;   
 }
 
+
+void print_status(int wstatus, int cpid) {
+    if (WIFEXITED(wstatus)) {  
+            print_myshell_return();
+            switch (wstatus) {
+                case 0: printf("processo %d foi finalizado com status 0. Executado com sucesso.\n",cpid); break;
+                case 1: printf("processo %d foi finalizado com status 1. Finalizado através de hangup.\n",cpid); break;
+            }
+            
+        }   
+        else if (WIFSIGNALED(wstatus)) {
+            switch(wstatus) {
+                case 9: printf("processo %d finalizou de forma anormal com sinal 9: foi executado um kill no processo.\n", cpid); break;
+                case 8: printf("processo %d finalizou de forma anormal com sinal 8: ocorreu um problema de ponto flutuante ou divisão por zero.\n", cpid); break;
+                case 4: printf("processo %d finalizou de forma anormal com sinal 4: o programa executou uma instrução ilegal.\n", cpid); break;
+                case 11: printf("processo %d finalizou de forma anormal com sinal 11: segmentation fault, o programa tentou acessar uma referência de memória inválida.\n", cpid); break;
+                case 134: printf("processo %d finalizou de forma anormal com sinal 6: o programa foi abortado.\n", cpid); break;
+            }
+            
+        } else if (WIFSTOPPED(wstatus)) {
+            printf("processo %d foi parado pelo sinal %d\n", cpid, WSTOPSIG(wstatus));
+        }
+}
+
 void wait_proc(){
     int wstatus;
     int cpid = wait(&wstatus);
     if(cpid > 0){
-        if (WIFEXITED(wstatus)) {  
-            print_myshell_return();
-            printf("processo %d foi finalizado com status %d.\n",cpid,WEXITSTATUS(wstatus));
-        }   
-        //To do: Tratar mais erros
-        else if (WIFSIGNALED(wstatus)) {
-            printf("processo %d finalizou de forma anormal com sinal %d, killed.\n", cpid, WTERMSIG(wstatus));
-        } else if (WIFSTOPPED(wstatus)) {
-            printf("processo %d foi parado pelo sinal %d\n", cpid, WSTOPSIG(wstatus));
-        }
+        print_status(wstatus, cpid);
     }
     else{
         print_myshell_return();
@@ -208,16 +223,7 @@ void run(char **argv){
     }
     else {     
         waitpid(cpid, &wstatus, WUNTRACED);
-        if (WIFEXITED(wstatus)) {  
-            print_myshell_return();
-            printf("processo %d foi finalizado com status %d.\n",cpid,WEXITSTATUS(wstatus));
-        }   
-        //To do: Tratar mais erros
-        else if (WIFSIGNALED(wstatus)) {
-            printf("processo %d finalizou de forma anormal com sinal %d, killed.\n", cpid, WTERMSIG(wstatus));
-        } else if (WIFSTOPPED(wstatus)) {
-            printf("processo %d foi parado pelo sinal %d\n", cpid, WSTOPSIG(wstatus));
-        }
+        print_status(wstatus, cpid);
     }                 
 }
 

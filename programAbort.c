@@ -2,6 +2,5 @@
 
 int main()
 {
-	int *teste;
-	free(&teste);   
+	abort();
 }
