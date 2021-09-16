@@ -6,6 +6,24 @@ MyShell - custom Linux shell for process management
 
 `./myshell`
 
+
+## Running a simple start, wait and run example
+
+`./myshell < startScript`
+
+## Running a simple kill, stop, continue example
+
+`./myshell`
+`start ./writeProgram`
+`stop <pid>`
+`continue <pid>`
+`kill <pid>`
+
+## Running a simple SIGSEGV, SIGABRT, SIGILL, SIGFPE example
+
+`./myshell < signalScript`
+
+
 ## Authors
 - [André Paiva](https://github.com/xornotor)
 - [Ariel Andrade](https://github.com/sudoariel)
