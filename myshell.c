@@ -163,15 +163,14 @@ void print_status(int wstatus, int cpid) {
                 case 0: printf("processo %d foi finalizado com status 0. Executado com sucesso.\n",cpid); break;
                 case 1: printf("processo %d foi finalizado com status 1. Finalizado através de hangup.\n",cpid); break;
             }
-            
         }   
         else if (WIFSIGNALED(wstatus)) {
             switch(wstatus) {
                 case 9: printf("processo %d finalizou de forma anormal com sinal 9: foi executado um kill no processo.\n", cpid); break;
-                case 8: printf("processo %d finalizou de forma anormal com sinal 8: ocorreu um problema de ponto flutuante ou divisão por zero.\n", cpid); break;
-                case 4: printf("processo %d finalizou de forma anormal com sinal 4: o programa executou uma instrução ilegal.\n", cpid); break;
-                case 11: printf("processo %d finalizou de forma anormal com sinal 11: segmentation fault, o programa tentou acessar uma referência de memória inválida.\n", cpid); break;
-                case 134: printf("processo %d finalizou de forma anormal com sinal 6: o programa foi abortado.\n", cpid); break;
+                case 136: printf("processo %d finalizou de forma anormal com sinal 8: ocorreu um problema de ponto flutuante ou divisão por zero.\n", cpid); break; //128 + 8
+                case 132: printf("processo %d finalizou de forma anormal com sinal 4: o programa executou uma instrução ilegal.\n", cpid); break; //128 + 4
+                case 139: printf("processo %d finalizou de forma anormal com sinal 11: segmentation fault, o programa tentou acessar uma referência de memória inválida.\n", cpid); break; //128 + 11
+                case 134: printf("processo %d finalizou de forma anormal com sinal 6: o programa foi abortado.\n", cpid); break; //128 + 6
             }
             
         } else if (WIFSTOPPED(wstatus)) {
