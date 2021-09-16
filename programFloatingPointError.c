@@ -3,5 +3,5 @@ int main() {
 
     int value = 5;
     value = value / 0;
-    return 0;
+    return value;
 }
