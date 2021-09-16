@@ -1,18 +1,31 @@
+#define _POSIX_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdbool.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <stdint.h>
+#include <signal.h>
 
 #define MYSHELL_VERSION "v0.0"
 #define CYAN_COLOR_TERM "\x1B[36;1m"
+#define YELL_COLOR_TERM "\x1B[33m"
 #define DEFAULT_COLOR_TERM "\x1B[0m"
 #define COMMAND_MAX_CHAR 4096
 #define COMMAND_MAX_WORD 100
 
 static void print_myshell();
+static void print_myshell_return();
 static void print_header();
 static int read_command(char** command, char*** args, int* arg_number);
+static void run(char** args);
+static void start(char** args);
+static void wait_proc();
+static void stop_proc();
+static void kill_proc();
+static void continue_proc();
 
 int main() {    
     print_header();
@@ -38,22 +51,28 @@ int main() {
 
             // Verifica comando e executa sua função específica
             if(strcmp(command, "wait") == 0) {
-                printf("TODO: Implementar comando %s.\n", command);
+                //printf("TODO: Implementar comando %s.\n", command);
+                wait_proc();
             }
             else if(strcmp(command, "start") == 0) {
-                printf("TODO: Implementar comando %s.\n", command);
+                //printf("TODO: Implementar comando %s.\n", command);
+                start(args);
             }
             else if(strcmp(command, "run") == 0) {
-                printf("TODO: Implementar comando %s.\n", command);
+                //printf("TODO: Implementar comando %s.\n", command);
+                run(args);
             }
             else if(strcmp(command, "stop") == 0) {
-                printf("TODO: Implementar comando %s.\n", command);
+                //printf("TODO: Implementar comando %s.\n", command);
+                stop_proc(args);
             }
             else if(strcmp(command, "continue") == 0) {
-                printf("TODO: Implementar comando %s.\n", command);
+                //printf("TODO: Implementar comando %s.\n", command);
+                continue_proc(args);
             }
             else if(strcmp(command, "kill") == 0) {
-                printf("TODO: Implementar comando %s.\n", command);
+                //printf("TODO: Implementar comando %s.\n", command);
+                kill_proc(args);
             }
             else if(strcmp(command, "quit") == 0 || strcmp(command, "exit") == 0) {
                 for(int i = 0; i < arg_number; i++) 
@@ -89,6 +108,12 @@ void print_myshell() {
     printf("myshell");
     printf("%s", DEFAULT_COLOR_TERM);
     printf("> ");
+}
+
+void print_myshell_return(){
+    printf("%s", YELL_COLOR_TERM);
+    printf("myshell: ");   
+    printf("%s", DEFAULT_COLOR_TERM);
 }
 
 void print_header() {
@@ -130,3 +155,98 @@ int read_command(char** command, char*** args, int* arg_number) {
     return 0;   
 }
 
+
+void print_status(int wstatus, int cpid) {
+    if (WIFEXITED(wstatus)) {  
+            print_myshell_return();
+            switch (wstatus) {
+                case 0: printf("processo %d foi finalizado com status 0. Executado com sucesso.\n",cpid); break;
+                case 1: printf("processo %d foi finalizado com status 1. Finalizado através de hangup.\n",cpid); break;
+            }
+            
+        }   
+        else if (WIFSIGNALED(wstatus)) {
+            switch(wstatus) {
+                case 9: printf("processo %d finalizou de forma anormal com sinal 9: foi executado um kill no processo.\n", cpid); break;
+                case 8: printf("processo %d finalizou de forma anormal com sinal 8: ocorreu um problema de ponto flutuante ou divisão por zero.\n", cpid); break;
+                case 4: printf("processo %d finalizou de forma anormal com sinal 4: o programa executou uma instrução ilegal.\n", cpid); break;
+                case 11: printf("processo %d finalizou de forma anormal com sinal 11: segmentation fault, o programa tentou acessar uma referência de memória inválida.\n", cpid); break;
+                case 134: printf("processo %d finalizou de forma anormal com sinal 6: o programa foi abortado.\n", cpid); break;
+            }
+            
+        } else if (WIFSTOPPED(wstatus)) {
+            printf("processo %d foi parado pelo sinal %d\n", cpid, WSTOPSIG(wstatus));
+        }
+}
+
+void wait_proc(){
+    int wstatus;
+    int cpid = wait(&wstatus);
+    if(cpid > 0){
+        print_status(wstatus, cpid);
+    }
+    else{
+        print_myshell_return();
+        printf("não há processos restantes.\n");
+    }
+}
+
+void start(char **argv){
+    pid_t cpid;
+    cpid = fork();
+    if (cpid == -1) {
+        exit(EXIT_FAILURE);
+    }
+    else if (cpid == 0) {  
+        int s = execvp(argv[0],argv);
+        if(s < 0) exit(EXIT_FAILURE);
+        
+    }
+    else{        
+        print_myshell_return();
+        printf("processo %d foi iniciado.\n",cpid); 
+    }
+}
+
+void run(char **argv){ 
+    pid_t cpid;
+    int wstatus;
+    cpid = fork();
+    if (cpid == -1) {
+        exit(EXIT_FAILURE);
+    }
+    else if (cpid == 0) {   
+       int s = execvp(argv[0],argv);
+       perror(argv[0]);
+       if(s < 0) exit(EXIT_FAILURE);
+       else exit(EXIT_SUCCESS);
+    }
+    else {     
+        waitpid(cpid, &wstatus, WUNTRACED);
+        print_status(wstatus, cpid);
+    }                 
+}
+
+void stop_proc(char **argv){
+    pid_t stop_pid = atoi(argv[0]);
+    if(kill(stop_pid, SIGSTOP) == -1){
+        print_myshell_return();
+        printf("Parada de processo falhou\n");
+    }
+}
+
+void kill_proc(char **argv){
+    pid_t stop_pid = atoi(argv[0]);
+    if(kill(stop_pid, SIGKILL) == -1){
+        print_myshell_return();
+        printf("Kill de processo falhou\n");
+    }
+}
+
+void continue_proc(char **argv){
+    pid_t stop_pid = atoi(argv[0]);
+    if(kill(stop_pid, SIGCONT) == -1){
+        print_myshell_return();
+        printf("Continue de processo falhou\n");
+    }
+}
