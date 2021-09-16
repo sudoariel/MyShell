@@ -14,9 +14,13 @@ MyShell - custom Linux shell for process management
 ## Running a simple kill, stop, continue example
 
 `./myshell`
+
 `start ./writeProgram`
+
 `stop <pid>`
+
 `continue <pid>`
+
 `kill <pid>`
 
 ## Running a simple SIGSEGV, SIGABRT, SIGILL, SIGFPE example
