@@ -40,9 +40,6 @@ fPtr = fopen("file1.txt", "a");
     /* Close file to save file data */
     fclose(fPtr);
 
-
-    /* Success message */
-    printf("File created and saved successfully. :) \n");
 }
 
     return 0;

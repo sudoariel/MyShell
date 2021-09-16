@@ -1,0 +1,12 @@
+run gcc -o programAbort programAbort.c
+run gcc -o programFloatingPointError programFloatingPointError.c
+run gcc -o programSegfault programSegfault.c
+run gcc -o programSigill programSigill.c
+start ./programAbort
+wait
+start ./programFloatingPointError
+wait
+start ./programSegfault
+wait
+start ./programSigill
+wait
